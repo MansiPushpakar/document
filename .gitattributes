@@ -1,2 +1,99 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+import os
+import streamlit as st
+import  fitz# PyMuPDF
+import openai
+
+# ---- CONFIG ----
+openai.api_key ="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" # make sure your key is set
+
+st.title("Mini PDF Q&A Demo")
+
+# Upload PDF
+uploaded = st.file_uploader("Upload a PDF", type=["pdf"])
+
+# Extract text
+def extract_text_from_pdf(pdf_bytes):
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    text = ""
+    for page in doc:
+        text += page.get_text("text") + "\n"
+    return text
+
+if uploaded:
+    pdf_text = extract_text_from_pdf(uploaded.read())
+    st.success("PDF loaded and text extracted!")
+
+    # Ask question
+    question = st.text_input("Ask something about the PDF:")
+    if st.button("Ask") and question:
+        with st.spinner("Asking OpenAI..."):
+            # Simple call without embeddings, just feed raw text
+            prompt = f"Here is the document:\n\n{pdf_text[:4000]}\n\nQuestion: {question}"
+            resp = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=400
+            )
+           
+
+
+            answer = resp['choices'][0]['message']['content']
+        st.markdown("### Answer")
+        st.write(answer)
+
+
+
+# CharacterTextSplitter(
+#         chunk_size=chunk_size,
+#         chunk_overlap=chunk_overlap
+#     )
+#     chunks = splitter.split_documents(documents)
+#     print(f"✅ Loaded {len(documents)} page(s)")
+#     print(f"✅ Split into {len(chunks)} chunks")
+#     return chunks
+
+# chunks = load_and_split_pdf("your_file.pdf")  # replace with your PDF
+
+# # Step 2: Create embeddings using HuggingFace
+# embedding = HuggingFaceEmbeddings(mode
+# Install necessary packages
+
+# from langchain_community.document_loaders import PyPDFLoader
+# from langchain.text_splitter import RecursiveCharacterTextSplitter
+# from langchain_community.embeddings import HuggingFaceEmbeddings
+# from langchain.chains import LLMChain
+# from langchain.prompts import PromptTemplate
+# from langchain_community.llms import HuggingFaceHub
+# from langchain_community.vectorstores import InMemoryVectorStore  # for demo purposes
+
+# # Step 1: Load and split PDF
+# def load_and_split_pdf(file_path, chunk_size=1000, chunk_overlap=200):
+#     loader = PyPDFLoader(file_path)
+#     documents = loader.load()
+#     splitter = Recursivel_name="all-MiniLM-L6-v2")
+
+# # Step 3: Create a simple vector store (can be replaced with AstraDB later)
+# vector_store = InMemoryVectorStore(embedding=embedding)
+# vector_store.add_texts([chunk.page_content for chunk in chunks])
+
+# # Step 4: Setup HuggingFace LLM for Q&A
+# llm = HuggingFaceHub(
+#     repo_id="google/flan-t5-base",  # small free LLM
+#     model_kwargs={"temperature":0.5, "max_length":200}
+# )
+
+# prompt = PromptTemplate.from_template("Q: {question}\nA:")
+# chain = LLMChain(llm=llm, prompt=prompt)
+
+# # Step 5: Example query
+# query = "Summarize the PDF content in a few sentences."
+# resp = chain.run(query)
+# print("\n--- Response ---\n")
+# print(resp)
+
+
